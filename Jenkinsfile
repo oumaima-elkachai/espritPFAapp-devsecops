@@ -8,14 +8,14 @@ pipeline {
 
     environment {
         SONAR_TOKEN = credentials('sonar-token')
-        GITHUB_TOKEN = credentials('github-token')
+        GITHUB_TOKEN = credentials('githubb-token') // updated ID
     }
 
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    credentialsId: 'github-token',
+                    credentialsId: 'githubb-token', // updated ID
                     url: 'https://github.com/oumaima-elkachai/espritPFAapp-devsecops.git'
             }
         }
