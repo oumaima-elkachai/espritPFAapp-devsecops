@@ -22,7 +22,8 @@ pipeline {
                     for (service in services) {
                         dir("back/${service}") {
                             echo "Building ${service}..."
-                            sh './mvnw clean install -DskipTests'
+                            sh 'mvn clean install -DskipTests'
+
                         }
                     }
                 }
