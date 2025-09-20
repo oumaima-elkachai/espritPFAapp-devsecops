@@ -18,12 +18,11 @@ pipeline {
         stage('Build Backend Microservices') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'Formation-Service', 'User-Service']
+                    def services = ['Eureka-Server', 'User-Service']
                     for (service in services) {
                         dir("back/${service}") {
                             echo "Building ${service}..."
                             sh 'mvn clean install -DskipTests'
-
                         }
                     }
                 }
@@ -33,7 +32,7 @@ pipeline {
         stage('Test Backend Microservices') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'Formation-Service', 'User-Service']
+                    def services = ['Eureka-Server', 'User-Service']
                     for (service in services) {
                         dir("back/${service}") {
                             echo "Testing ${service}..."
@@ -47,7 +46,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'Formation-Service', 'User-Service']
+                    def services = ['Eureka-Server', 'User-Service']
                     for (service in services) {
                         dir("back/${service}") {
                             withSonarQubeEnv('SonarQube') {
@@ -60,19 +59,10 @@ pipeline {
             }
         }
 
-        stage('Build Frontend') {
-            steps {
-                dir('front') {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
-            }
-        }
-
         stage('Docker Build Backend') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'Formation-Service', 'User-Service']
+                    def services = ['Eureka-Server', 'User-Service']
                     for (service in services) {
                         dir("back/${service}") {
                             echo "Building Docker image for ${service}..."
@@ -83,19 +73,10 @@ pipeline {
             }
         }
 
-        stage('Docker Build Frontend') {
-            steps {
-                dir('front') {
-                    echo "Building Docker image for frontend..."
-                    sh "docker build -t espritapp-frontend:latest ."
-                }
-            }
-        }
-
         stage('Trivy Scan') {
             steps {
                 script {
-                    def images = ['espritapp-eureka-server', 'espritapp-formation-service', 'espritapp-user-service', 'espritapp-frontend']
+                    def images = ['espritapp-eureka-server', 'espritapp-user-service']
                     for (image in images) {
                         echo "Scanning Docker image ${image}..."
                         sh "trivy image ${image}:latest"
@@ -107,7 +88,6 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh 'kubectl apply -f k8s/backend/'
-                sh 'kubectl apply -f k8s/frontend/'
             }
         }
     }
