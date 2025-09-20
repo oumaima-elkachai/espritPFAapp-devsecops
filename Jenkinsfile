@@ -36,7 +36,8 @@ pipeline {
                     for (service in services) {
                         dir("back/${service}") {
                             echo "Testing ${service}..."
-                            sh './mvnw test'
+                            sh 'mvn test'
+
                         }
                     }
                 }
@@ -51,7 +52,8 @@ pipeline {
                         dir("back/${service}") {
                             withSonarQubeEnv('SonarQube') {
                                 echo "Analyzing ${service} in SonarQube..."
-                                sh "./mvnw sonar:sonar -Dsonar.login=$SONAR_TOKEN"
+                                sh "mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN"
+
                             }
                         }
                     }
