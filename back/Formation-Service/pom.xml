@@ -16,10 +16,14 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>Formation-Service</name>
 
+  
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
     </properties>
+
 
     <dependencies>
         <!-- Swagger -->
