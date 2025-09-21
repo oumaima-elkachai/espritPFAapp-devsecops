@@ -18,7 +18,7 @@ pipeline {
         stage('Build Backend Microservices') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'User-Service']
+                    def services = ['Eureka-Server', 'User-Service', 'Formation-Service']
                     for (service in services) {
                         dir("back/${service}") {
                             echo "Building ${service}..."
@@ -32,12 +32,11 @@ pipeline {
         stage('Test Backend Microservices') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'User-Service']
+                    def services = ['Eureka-Server', 'User-Service', 'Formation-Service']
                     for (service in services) {
                         dir("back/${service}") {
                             echo "Testing ${service}..."
                             sh 'mvn test'
-
                         }
                     }
                 }
@@ -47,13 +46,12 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'User-Service']
+                    def services = ['Eureka-Server', 'User-Service', 'Formation-Service']
                     for (service in services) {
                         dir("back/${service}") {
                             withSonarQubeEnv('SonarQube') {
                                 echo "Analyzing ${service} in SonarQube..."
                                 sh "mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN"
-
                             }
                         }
                     }
@@ -64,7 +62,7 @@ pipeline {
         stage('Docker Build Backend') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'User-Service']
+                    def services = ['Eureka-Server', 'User-Service', 'Formation-Service']
                     for (service in services) {
                         dir("back/${service}") {
                             echo "Building Docker image for ${service}..."
@@ -78,7 +76,7 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 script {
-                    def images = ['espritapp-eureka-server', 'espritapp-user-service']
+                    def images = ['espritapp-eureka-server', 'espritapp-user-service', 'espritapp-formation-service']
                     for (image in images) {
                         echo "Scanning Docker image ${image}..."
                         sh "trivy image ${image}:latest"
