@@ -29,6 +29,13 @@ pipeline {
             }
         }
 
+        stage('Start MySQL') {
+            steps {
+                sh 'docker compose -f docker-compose.yml up -d'
+                sh 'sleep 20' // attendre MySQL
+            }
+        }
+
         stage('Test Backend Microservices') {
             steps {
                 script {
@@ -90,5 +97,13 @@ pipeline {
                 sh 'kubectl apply -f k8s/backend/'
             }
         }
+
+        stage('Stop MySQL') {
+            steps {
+                sh 'docker compose -f docker-compose.yml down'
+            }
+        }
+
+
     }
 }
