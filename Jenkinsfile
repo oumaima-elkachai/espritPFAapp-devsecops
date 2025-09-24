@@ -31,7 +31,7 @@ pipeline {
 
         stage('Start MySQL') {
             steps {
-                sh 'docker compose -f docker-compose.yml up -d'
+                sh 'docker compose -f back/docker-compose.yml up -d'
                 sh 'sleep 20' // attendre MySQL
             }
         }
@@ -100,7 +100,7 @@ pipeline {
 
         stage('Stop MySQL') {
             steps {
-                sh 'docker compose -f docker-compose.yml down'
+                sh 'docker compose -f back/docker-compose.yml down'
             }
         }
 
