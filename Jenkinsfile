@@ -4,6 +4,7 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('sonar-token')
         GITHUB_TOKEN = credentials('githubb-token')
+        PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     }
 
     stages {
@@ -31,8 +32,11 @@ pipeline {
 
         stage('Start MySQL') {
             steps {
-                sh 'docker compose -f back/docker-compose.yml up -d'
-                sh 'sleep 20' 
+                dir('back') {
+                    echo 'Starting MySQL...'
+                    sh 'docker compose up -d'
+                    sh 'sleep 20' // attendre que MySQL soit prêt
+                }
             }
         }
 
@@ -94,16 +98,19 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/backend/'
+                dir('k8s/backend') {
+                    sh 'kubectl apply -f .'
+                }
             }
         }
 
         stage('Stop MySQL') {
             steps {
-                sh 'docker compose -f back/docker-compose.yml down'
+                dir('back') {
+                    echo 'Stopping MySQL...'
+                    sh 'docker compose down'
+                }
             }
         }
-
-
     }
 }
