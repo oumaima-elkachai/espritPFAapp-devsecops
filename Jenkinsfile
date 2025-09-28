@@ -1,68 +1,40 @@
 pipeline {
     agent any
-
     environment {
+        DOCKERHUB = credentials('dockerhub-credentials')
         SONAR_TOKEN = credentials('sonar-token')
-        GITHUB_TOKEN = credentials('githubb-token')
-        PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        KUBECONFIG_FILE = credentials('kubeconfig')
+        GIT_URL = 'https://github.com/oumaima-elkachai/espritPFAapp-devsecops.git'
+        GIT_BRANCH = 'main'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    credentialsId: 'githubb-token',
-                    url: 'https://github.com/oumaima-elkachai/espritPFAapp-devsecops.git'
+                git branch: "${GIT_BRANCH}", credentialsId: 'github-token', url: "${GIT_URL}"
             }
         }
 
-        stage('Build Backend Microservices') {
+        stage('Build, Test & SonarQube') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'User-Service', 'Formation-Service']
+                    def services = [
+                        [name: 'eureka-server', key: 'tn.esprit.spring:Eureka-Server'],
+                        [name: 'formation-service', key: 'Formation-Service'],
+                        [name: 'user-service', key: 'User-Service']
+                    ]
                     for (service in services) {
-                        dir("back/${service}") {
-                            echo "Building ${service}..."
-                            sh 'mvn clean install -DskipTests'
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Start MySQL') {
-            steps {
-                dir('back') {
-                    echo 'Starting MySQL...'
-                    sh 'docker compose up -d'
-                    sh 'sleep 20' // attendre que MySQL soit prêt
-                }
-            }
-        }
-
-        stage('Test Backend Microservices') {
-            steps {
-                script {
-                    def services = ['Eureka-Server', 'User-Service', 'Formation-Service']
-                    for (service in services) {
-                        dir("back/${service}") {
-                            echo "Testing ${service}..."
-                            sh 'mvn test'
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def services = ['Eureka-Server', 'User-Service', 'Formation-Service']
-                    for (service in services) {
-                        dir("back/${service}") {
-                            withSonarQubeEnv('SonarQube') {
-                                echo "Analyzing ${service} in SonarQube..."
-                                sh "mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN"
+                        dir("back/${service.name}") {
+                            echo "🏗️ Build + Tests + Sonar pour ${service.name}"
+                            withSonarQubeEnv('sonar-server') {
+                                sh """
+                                    mvn clean verify -Pci sonar:sonar \
+                                    -Dsonar.projectKey=${service.key} \
+                                    -Dsonar.host.url=${env.SONAR_HOST_URL} \
+                                    -Dsonar.login=${SONAR_TOKEN} \
+                                    -Dsonar.java.binaries=target/classes \
+                                    -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                                """
                             }
                         }
                     }
@@ -70,14 +42,19 @@ pipeline {
             }
         }
 
-        stage('Docker Build Backend') {
+        stage('Wait for SonarQube Quality Gate') {
+            steps { waitForQualityGate abortPipeline: true }
+        }
+
+        stage('Docker Build & Push') {
             steps {
                 script {
-                    def services = ['Eureka-Server', 'User-Service', 'Formation-Service']
-                    for (service in services) {
-                        dir("back/${service}") {
-                            echo "Building Docker image for ${service}..."
-                            sh "docker build -t espritapp-${service.toLowerCase()}:latest ."
+                    def services = ['eureka-server', 'formation-service', 'user-service']
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
+                        for (service in services) {
+                            def imageName = "oumaimakachai/${service}:latest"
+                            sh "docker build -t ${imageName} back/${service}"
+                            sh "docker push ${imageName}"
                         }
                     }
                 }
@@ -87,10 +64,9 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 script {
-                    def images = ['espritapp-eureka-server', 'espritapp-user-service', 'espritapp-formation-service']
+                    def images = ['oumaimakachai/eureka-server','oumaimakachai/formation-service','oumaimakachai/user-service']
                     for (image in images) {
-                        echo "Scanning Docker image ${image}..."
-                        sh "trivy image ${image}:latest"
+                        sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${image}:latest || true"
                     }
                 }
             }
@@ -98,19 +74,20 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                dir('k8s/backend') {
-                    sh 'kubectl apply -f .'
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh 'kubectl apply -f k8s/backend/'
+                    sh 'kubectl get pods'
                 }
             }
         }
+    }
 
-        stage('Stop MySQL') {
-            steps {
-                dir('back') {
-                    echo 'Stopping MySQL...'
-                    sh 'docker compose down'
-                }
-            }
+    post {
+        always {
+            sh 'docker logout || true'
+            sh 'docker system prune -f || true'
         }
+        success { echo '✅ Pipeline réussie !' }
+        failure { echo '❌ Pipeline échouée !' }
     }
 }

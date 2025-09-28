@@ -1,3 +1,16 @@
+version: "3.9"
+services:
+  mysql-service:
+    image: mysql:8
+    container_name: mysql-service
+    environment:
+      MYSQL_ROOT_PASSWORD: 0000
+      MYSQL_DATABASE: FormationService
+    ports:
+      - "3306:3306"
+    networks:
+      - my-network
+
   eureka-server:
     build: ./eureka-server
     container_name: eureka-server
@@ -33,3 +46,7 @@
       - "8082:8082"
     networks:
       - my-network
+
+networks:
+  my-network:
+    driver: bridge
