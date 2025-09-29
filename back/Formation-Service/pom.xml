@@ -115,6 +115,13 @@
                 <spring.profiles.active>ci</spring.profiles.active>
             </properties>
         </profile>
+
+        <profile>
+            <id>integration-tests</id>
+            <properties>
+                <spring.profiles.active=test-mysql
+            </properties>
+        </profile>
     </profiles>
 
 </project>
