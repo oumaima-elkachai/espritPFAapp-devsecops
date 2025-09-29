@@ -67,20 +67,19 @@
 
     <!-- ===== Profiles pour Jenkins CI/CD ===== -->
     <profiles>
-        <profile>
-            <id>ci</id>
-            <properties>
-                <!-- Active le profile Spring Boot 'ci' qui utilise H2 pour les tests -->
-                <spring.profiles.active>ci</spring.profiles.active>
-            </properties>
-        </profile>
+    <profile>
+        <id>ci</id>
+        <properties>
+            <spring.profiles.active>ci</spring.profiles.active>
+        </properties>
+    </profile>
 
-        <profile>
-            <id>integration-tests</id>
-            <properties>
-                <spring.profiles.active=test-mysql
-            </properties>
-        </profile>
-    </profiles>
+    <profile>
+        <id>integration-tests</id>
+        <properties>
+            <spring.profiles.active>test-mysql</spring.profiles.active>
+        </properties>
+    </profile>
+</profiles>
 
 </project>
