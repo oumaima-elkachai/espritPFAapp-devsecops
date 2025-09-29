@@ -16,15 +16,12 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>Formation-Service</name>
 
-
-
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
-
 
     <dependencies>
         <!-- Swagger -->
@@ -39,7 +36,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -70,6 +66,8 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- Cloudinary -->
         <dependency>
             <groupId>com.cloudinary</groupId>
             <artifactId>cloudinary-http44</artifactId>
@@ -82,11 +80,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-
     </dependencies>
-
-
 
     <dependencyManagement>
         <dependencies>
@@ -101,17 +95,26 @@
     </dependencyManagement>
 
     <build>
-    <plugins>
-        <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <version>3.3.1</version>
-            <configuration>
-                <encoding>UTF-8</encoding>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-
+    <!-- ===== Profiles pour Jenkins CI/CD ===== -->
+    <profiles>
+        <profile>
+            <id>ci</id>
+            <properties>
+                <!-- Active le profile Spring Boot 'ci' qui utilise H2 pour les tests -->
+                <spring.profiles.active>ci</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

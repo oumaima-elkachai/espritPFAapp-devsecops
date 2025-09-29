@@ -65,4 +65,15 @@
         </plugins>
     </build>
 
+    <!-- ===== Profiles pour Jenkins CI/CD ===== -->
+    <profiles>
+        <profile>
+            <id>ci</id>
+            <properties>
+                <!-- Active le profile Spring Boot 'ci' qui utilise H2 pour les tests -->
+                <spring.profiles.active>ci</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>
